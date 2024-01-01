@@ -33,6 +33,38 @@ pipeline {
     }
 
   stages {
+
+  //-------------------------------------------------------------------------------------------------------------------------------------------------------------
+                  stage('Checkout') {
+                      steps {
+                          gitNotify(stageName: "${env.STAGE_NAME}", statusName: "PENDING")
+                          script {
+                              try {
+                                  sh """
+                                      git config --global user.email "dmitr.domrachev@gmail.com"
+                                      git config --global user.name  "Dmitry Domrachev"
+                                      git reset --merge
+                                      git reset
+                                      git checkout .
+                                      git clean -fdx
+                                  """
+                              } catch (Exception ex) {
+                                  echo "^^^^ Exception occurred: " + ex.toString()
+                              }
+
+                              git url          : "${env.repoUrl}",
+                                  credentialsId: "${env.gitCred}",
+                                  branch       : "${env.sourceBranch}"
+                          }
+                      }
+                      post {
+                          always {
+                              gitNotify(stageName: "${env.STAGE_NAME}", statusName: currentBuild.currentResult)
+                          }
+                      }
+                  }
+  //-------------------------------------------------------------------------------------------------------------------------------------------------------------
+
     stage('Clone GitHub Repository') {
       steps {
         git credentialsId: '58df7ab5-3588-4912-923b-e9dbb1456ef0', url: 'https://github.com/DmitrDomrachev/flutter_game', branch: 'main'
